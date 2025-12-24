@@ -31,7 +31,8 @@ const defaultSettings = {
         }
     ],
     filterCodeBlock: false,
-    autoMode: autoModeOptions.NONE
+    autoMode: autoModeOptions.NONE,
+    maxTokens: 1024
 };
 
 async function loadSettings() {
@@ -49,9 +50,14 @@ async function loadSettings() {
         extension_settings[extensionName].autoMode = autoModeOptions.NONE;
     }
     
+    if (!extension_settings[extensionName].maxTokens) {
+        extension_settings[extensionName].maxTokens = 1024;
+    }
+    
     $("#llm_translator_language").val(extension_settings[extensionName].targetLanguage);
     $("#llm_translator_filter_codeblock").prop("checked", extension_settings[extensionName].filterCodeBlock);
     $("#llm_translator_auto_mode").val(extension_settings[extensionName].autoMode);
+    $("#llm_translator_max_tokens").val(extension_settings[extensionName].maxTokens);
     
     updatePresetDropdown();
 }
@@ -112,6 +118,12 @@ function onFilterCodeBlockChange(event) {
 function onAutoModeChange(event) {
     const value = $(event.target).val();
     extension_settings[extensionName].autoMode = value;
+    saveSettingsDebounced();
+}
+
+function onMaxTokensChange(event) {
+    const value = parseInt($(event.target).val()) || 1024;
+    extension_settings[extensionName].maxTokens = value;
     saveSettingsDebounced();
 }
 
@@ -303,7 +315,7 @@ async function translateText(text) {
         const result = await ConnectionManagerRequestService.sendRequest(
             settings.profileId,
             prompt,
-            500
+            settings.maxTokens || 1024
         );
         
         let translation = result?.content || result?.text || result;
@@ -404,6 +416,7 @@ jQuery(async () => {
         $("#llm_translator_prompt").on("input", onPromptChange);
         $("#llm_translator_filter_codeblock").on("input", onFilterCodeBlockChange);
         $("#llm_translator_auto_mode").on("change", onAutoModeChange);
+        $("#llm_translator_max_tokens").on("input", onMaxTokensChange);
         $("#llm_translator_new_preset").on("click", onNewPreset);
         $("#llm_translator_rename_preset").on("click", onRenamePreset);
         $("#llm_translator_delete_preset").on("click", onDeletePreset);
