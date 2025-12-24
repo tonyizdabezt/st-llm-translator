@@ -1,0 +1,59 @@
+<div class="llm-translator-settings">
+    <div class="inline-drawer">
+        <div class="inline-drawer-toggle inline-drawer-header">
+            <b>LLM Translator</b>
+            <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+        </div>
+        <div class="inline-drawer-content">
+            <div class="llm_translator_block">
+                <label for="llm_translator_language">Target Language</label>
+                <input id="llm_translator_language" type="text" class="text_pole" placeholder="e.g. English, Japanese, Spanish..." />
+            </div>
+            <div class="llm_translator_block" id="llm_translator_profile_block">
+                <label for="llm_translator_profile">Connection Profile</label>
+                <select id="llm_translator_profile" class="text_pole"></select>
+            </div>
+            <div class="llm_translator_block">
+                <label for="llm_translator_auto_mode">Auto Mode</label>
+                <select id="llm_translator_auto_mode" class="text_pole">
+                    <option value="none">None</option>
+                    <option value="responses">Responses</option>
+                    <option value="inputs">Inputs</option>
+                    <option value="both">Both</option>
+                </select>
+            </div>
+            
+            <hr class="sysHR" />
+            
+            <div class="llm_translator_block">
+                <label for="llm_translator_preset">Prompt Preset</label>
+                <div class="llm_translator_preset_row">
+                    <select id="llm_translator_preset" class="text_pole flex1"></select>
+                    <div class="llm_translator_preset_buttons">
+                        <div id="llm_translator_new_preset" class="menu_button menu_button_icon" title="New Preset">
+                            <i class="fa-solid fa-plus"></i>
+                        </div>
+                        <div id="llm_translator_rename_preset" class="menu_button menu_button_icon" title="Rename Preset">
+                            <i class="fa-solid fa-pencil"></i>
+                        </div>
+                        <div id="llm_translator_delete_preset" class="menu_button menu_button_icon" title="Delete Preset">
+                            <i class="fa-solid fa-trash"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="llm_translator_block">
+                <label for="llm_translator_prompt">Prompt Template</label>
+                <textarea id="llm_translator_prompt" class="text_pole" rows="6" placeholder="Use {{language}}, {{targetmessage}},..."></textarea>
+                <small class="llm_translator_help">Placeholders: <code>{{language}}</code>, <code>{{targetmessage}}</code></small>
+            </div>
+            <div class="llm_translator_block">
+                <label class="checkbox_label">
+                    <input id="llm_translator_filter_codeblock" type="checkbox" />
+                    Filter Code Block
+                </label>
+                <small class="llm_translator_help">Extract text from code blocks in the response</small>
+            </div>
+        </div>
+    </div>
+</div>

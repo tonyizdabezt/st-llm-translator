@@ -1,0 +1,63 @@
+/* LLM Translator Styles */
+.llm_translator_block {
+    margin-bottom: 10px;
+}
+
+.llm_translator_block label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.llm_translator_block .checkbox_label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.llm_translator_preset_row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.llm_translator_preset_row .flex1 {
+    flex: 1;
+}
+
+.llm_translator_preset_buttons {
+    display: flex;
+    gap: 3px;
+}
+
+.llm_translator_preset_buttons .menu_button_icon {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.llm_translator_help {
+    display: block;
+    margin-top: 3px;
+    opacity: 0.7;
+}
+
+.llm_translator_help code {
+    background: rgba(128, 128, 128, 0.2);
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+/* Message translate button - make it visible by default */
+.mes_llm_translate {
+    display: flex !important;
+    color: #8bc34a !important;
+}
+
+.mes_llm_translate:hover {
+    color: #aed581 !important;
+}
