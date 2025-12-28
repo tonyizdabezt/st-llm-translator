@@ -6,7 +6,7 @@
   "js": "index.js",
   "css": "style.css",
   "author": "Tony",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "homePage": "https://github.com/tonyizdabezt/st-llm-translator",
   "description": "Translate chat messages using your configured LLM APIs with customizable prompts and auto-translation modes."
 }
