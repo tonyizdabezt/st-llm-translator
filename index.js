@@ -469,7 +469,7 @@ jQuery(async () => {
                 new SlashCommandArgument(
                     'The text to translate (optional)',
                     ARGUMENT_TYPE.STRING,
-                    false, // Not required anymore
+                    false,
                     false,
                     ''
                 ),

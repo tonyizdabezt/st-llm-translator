@@ -52,7 +52,6 @@
     border-radius: 3px;
 }
 
-/* Message translate button - make it visible by default */
 .mes_llm_translate {
     display: flex !important;
     color: #8bc34a !important;
