@@ -154,6 +154,7 @@ async function autoTranslateIncoming(messageId) {
     }
     
     try {
+        toastr.info("Translating...", "LLM Translator", { timeOut: 3000 });
         const translation = await translateText(originalText);
         
         if (translation) {
@@ -164,6 +165,7 @@ async function autoTranslateIncoming(messageId) {
             message.extra.llm_translated = true;
             updateMessageBlock(Number(messageId), message);
             await context.saveChat();
+            toastr.success("Translation complete", "LLM Translator", { timeOut: 2000 });
         }
     } catch (error) {
         console.error(`[${extensionName}] Auto-translate error:`, error);
@@ -192,6 +194,7 @@ async function autoTranslateOutgoing(messageId) {
     }
     
     try {
+        toastr.info("Translating...", "LLM Translator", { timeOut: 3000 });
         const translation = await translateText(originalText);
         
         if (translation) {
@@ -203,6 +206,7 @@ async function autoTranslateOutgoing(messageId) {
             message.mes = translation;
             updateMessageBlock(Number(messageId), message);
             await context.saveChat();
+            toastr.success("Translation complete", "LLM Translator", { timeOut: 2000 });
         }
     } catch (error) {
         console.error(`[${extensionName}] Auto-translate error:`, error);
@@ -350,6 +354,7 @@ async function onMessageTranslateClick() {
         delete message.extra.llm_translated;
         updateMessageBlock(Number(messageId), message);
         await context.saveChat();
+        toastr.info("Reverted to original", "LLM Translator", { timeOut: 2000 });
         return;
     }
     
@@ -358,6 +363,7 @@ async function onMessageTranslateClick() {
     $button.find('i').attr('class', 'fa-solid fa-spinner fa-spin');
     
     try {
+        toastr.info("Translating...", "LLM Translator", { timeOut: 3000 });
         const translation = await translateText(originalText);
         
         if (translation) {
@@ -369,6 +375,7 @@ async function onMessageTranslateClick() {
             
             updateMessageBlock(Number(messageId), message);
             await context.saveChat();
+            toastr.success("Translation complete", "LLM Translator", { timeOut: 2000 });
         }
     } finally {
         $button.find('i').attr('class', originalIcon);
