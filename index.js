@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { extension_settings, getContext, loadExtensionSettings } from "../../../extensions.js";
 import { eventSource, event_types, saveSettingsDebounced, updateMessageBlock } from "../../../../script.js";
 import { ConnectionManagerRequestService } from "../../shared.js";
