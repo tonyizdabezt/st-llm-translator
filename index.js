@@ -41,25 +41,25 @@ async function loadSettings() {
     if (Object.keys(extension_settings[extensionName]).length === 0) {
         Object.assign(extension_settings[extensionName], defaultSettings);
     }
-    
+
     if (!extension_settings[extensionName].promptPresets) {
         extension_settings[extensionName].promptPresets = defaultSettings.promptPresets;
         extension_settings[extensionName].selectedPresetIndex = 0;
     }
-    
+
     if (!extension_settings[extensionName].autoMode) {
         extension_settings[extensionName].autoMode = autoModeOptions.NONE;
     }
-    
+
     if (!extension_settings[extensionName].maxTokens) {
         extension_settings[extensionName].maxTokens = 1024;
     }
-    
+
     $("#llm_translator_language").val(extension_settings[extensionName].targetLanguage);
     $("#llm_translator_filter_codeblock").prop("checked", extension_settings[extensionName].filterCodeBlock);
     $("#llm_translator_auto_mode").val(extension_settings[extensionName].autoMode);
     $("#llm_translator_max_tokens").val(extension_settings[extensionName].maxTokens);
-    
+
     updatePresetDropdown();
 }
 
@@ -67,11 +67,11 @@ function updatePresetDropdown() {
     const settings = extension_settings[extensionName];
     const $dropdown = $("#llm_translator_preset");
     $dropdown.empty();
-    
+
     settings.promptPresets.forEach((preset, index) => {
         $dropdown.append(`<option value="${index}">${preset.name}</option>`);
     });
-    
+
     $dropdown.val(settings.selectedPresetIndex);
     updatePromptTextarea();
 }
@@ -136,28 +136,28 @@ function shouldAutoTranslate(types) {
 async function autoTranslateIncoming(messageId) {
     const context = getContext();
     const message = context.chat[messageId];
-    
+
     if (!message || message.is_user) {
         return;
     }
-    
+
     if (message.extra?.llm_translated) {
         return;
     }
-    
+
     if (!extension_settings[extensionName].profileId) {
         return;
     }
-    
+
     const originalText = message.mes;
     if (!originalText?.trim()) {
         return;
     }
-    
+
     try {
         toastr.info("Translating...", "LLM Translator", { timeOut: 3000 });
         const translation = await translateText(originalText);
-        
+
         if (translation) {
             if (typeof message.extra !== 'object') {
                 message.extra = {};
@@ -176,28 +176,28 @@ async function autoTranslateIncoming(messageId) {
 async function autoTranslateOutgoing(messageId) {
     const context = getContext();
     const message = context.chat[messageId];
-    
+
     if (!message || !message.is_user) {
         return;
     }
-    
+
     if (message.extra?.llm_translated) {
         return;
     }
-    
+
     if (!extension_settings[extensionName].profileId) {
         return;
     }
-    
+
     const originalText = message.mes;
     if (!originalText?.trim()) {
         return;
     }
-    
+
     try {
         toastr.info("Translating...", "LLM Translator", { timeOut: 3000 });
         const translation = await translateText(originalText);
-        
+
         if (translation) {
             if (typeof message.extra !== 'object') {
                 message.extra = {};
@@ -231,7 +231,7 @@ async function handleOutgoingMessage(messageId) {
 function onNewPreset() {
     const name = prompt("Enter preset name:", "New Preset");
     if (!name) return;
-    
+
     const settings = extension_settings[extensionName];
     settings.promptPresets.push({
         name: name,
@@ -247,7 +247,7 @@ function onRenamePreset() {
     const preset = settings.promptPresets[settings.selectedPresetIndex];
     const name = prompt("Enter new name:", preset.name);
     if (!name) return;
-    
+
     preset.name = name;
     saveSettingsDebounced();
     updatePresetDropdown();
@@ -255,15 +255,15 @@ function onRenamePreset() {
 
 function onDeletePreset() {
     const settings = extension_settings[extensionName];
-    
+
     if (settings.promptPresets.length <= 1) {
         toastr.warning("Cannot delete the last preset", "LLM Translator");
         return;
     }
-    
+
     const preset = settings.promptPresets[settings.selectedPresetIndex];
     if (!confirm(`Delete preset "${preset.name}"?`)) return;
-    
+
     settings.promptPresets.splice(settings.selectedPresetIndex, 1);
     settings.selectedPresetIndex = Math.max(0, settings.selectedPresetIndex - 1);
     saveSettingsDebounced();
@@ -274,9 +274,9 @@ function extractFromCodeBlock(text) {
     if (!extension_settings[extensionName].filterCodeBlock) {
         return text;
     }
-    
+
     let result = text;
-    
+
     const codeBlockMatch = result.match(/^[\s\S]*?```[\w]*\r?\n?([\s\S]*?)```[\s\S]*$/);
     if (codeBlockMatch) {
         result = codeBlockMatch[1];
@@ -366,17 +366,17 @@ async function onMessageTranslateClick() {
     const messageId = $mes.attr('mesid');
     const context = getContext();
     const message = context.chat[messageId];
-    
+
     if (!message) {
         return;
     }
-    
+
     const originalText = message.mes;
-    
+
     if (!originalText || !originalText.trim()) {
         return;
     }
-    
+
     if (message.extra?.llm_translated) {
         delete message.extra.display_text;
         delete message.extra.llm_translated;
@@ -385,22 +385,22 @@ async function onMessageTranslateClick() {
         toastr.info("Reverted to original", "LLM Translator", { timeOut: 2000 });
         return;
     }
-    
+
     const $button = $(this);
     const originalIcon = $button.find('i').attr('class');
     $button.find('i').attr('class', 'fa-solid fa-spinner fa-spin');
-    
+
     try {
         toastr.info("Translating...", "LLM Translator", { timeOut: 3000 });
         const translation = await translateText(originalText);
-        
+
         if (translation) {
             if (typeof message.extra !== 'object') {
                 message.extra = {};
             }
             message.extra.display_text = translation;
             message.extra.llm_translated = true;
-            
+
             updateMessageBlock(Number(messageId), message);
             await context.saveChat();
             toastr.success("Translation complete", "LLM Translator", { timeOut: 2000 });
@@ -455,15 +455,15 @@ jQuery(async () => {
         $("#llm_translator_new_preset").on("click", onNewPreset);
         $("#llm_translator_rename_preset").on("click", onRenamePreset);
         $("#llm_translator_delete_preset").on("click", onDeletePreset);
-        
+
         $(document).on('click', '.mes_llm_translate', onMessageTranslateClick);
-        
+
         eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, handleIncomingMessage);
         eventSource.on(event_types.USER_MESSAGE_RENDERED, handleOutgoingMessage);
         eventSource.on(event_types.MESSAGE_SWIPED, handleIncomingMessage);
-        
+
         addTranslateButtons();
-        
+
         const observer = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
                 if (mutation.addedNodes.length) {
@@ -471,14 +471,14 @@ jQuery(async () => {
                 }
             }
         });
-        
+
         const chatContainer = document.getElementById('chat');
         if (chatContainer) {
             observer.observe(chatContainer, { childList: true, subtree: true });
         }
-        
+
         initConnectionDropdown();
-        
+
         SlashCommandParser.addCommandObject(SlashCommand.fromProps({
             name: 'llm-translate',
             helpString: 'Translate text using the configured LLM API. If no text is provided, translates the latest message. Uses the current extension settings for language and prompt.',
@@ -505,15 +505,15 @@ jQuery(async () => {
                 const context = getContext();
                 const settings = extension_settings[extensionName];
                 const originalLang = settings.targetLanguage;
-                
+
                 if (args?.lang) {
                     settings.targetLanguage = String(args.lang);
                 }
-                
+
                 let textToTranslate = value ? String(value).trim() : '';
                 let messageId = null;
                 let message = null;
-                
+
                 if (!textToTranslate) {
                     const chat = context.chat;
                     if (chat && chat.length > 0) {
@@ -522,14 +522,14 @@ jQuery(async () => {
                         textToTranslate = message.mes || '';
                     }
                 }
-                
+
                 if (!textToTranslate) {
                     return '';
                 }
-                
+
                 try {
                     const result = await translateText(textToTranslate);
-                    
+
                     if (result && message !== null && messageId !== null) {
                         if (typeof message.extra !== 'object') {
                             message.extra = {};
@@ -539,7 +539,7 @@ jQuery(async () => {
                         updateMessageBlock(Number(messageId), message);
                         await context.saveChat();
                     }
-                    
+
                     return result || '';
                 } finally {
                     settings.targetLanguage = originalLang;
@@ -547,7 +547,7 @@ jQuery(async () => {
             },
             returns: ARGUMENT_TYPE.STRING,
         }));
-        
+
         console.log(`[${extensionName}] ✅ Loaded successfully`);
     } catch (error) {
         console.error(`[${extensionName}] ❌ Failed to load:`, error);
