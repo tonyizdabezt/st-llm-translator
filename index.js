@@ -7,11 +7,9 @@ import { getPresetManager } from "../../../preset-manager.js";
 import { SlashCommand } from "../../../slash-commands/SlashCommand.js";
 import { ARGUMENT_TYPE, SlashCommandArgument, SlashCommandNamedArgument } from "../../../slash-commands/SlashCommandArgument.js";
 import { SlashCommandParser } from "../../../slash-commands/SlashCommandParser.js";
-import { DebugRecorder, mountDebugViewer } from "./debug.js";
 
 const extensionName = "st-llm-translator";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
-const debugRecorder = new DebugRecorder();
 
 const autoModeOptions = {
     NONE: 'none',
@@ -37,8 +35,7 @@ const defaultSettings = {
     ],
     filterCodeBlock: false,
     autoMode: autoModeOptions.NONE,
-    maxTokens: 1024,
-    debugMode: false
+    maxTokens: 1024
 };
 
 async function loadSettings() {
@@ -220,13 +217,6 @@ async function autoTranslateOutgoing(messageId) {
 }
 
 async function handleIncomingMessage(messageId) {
-    const message = getContext().chat[messageId];
-    if (message && !message.is_user) {
-        debugRecorder.add('chat', `Chat message ${messageId}`, {
-            content: message.mes,
-            reasoning: message.extra?.reasoning,
-        });
-    }
     const incomingTypes = [autoModeOptions.RESPONSES, autoModeOptions.BOTH];
     if (shouldAutoTranslate(incomingTypes)) {
         await autoTranslateIncoming(messageId);
@@ -347,11 +337,6 @@ async function translateText(text) {
         .replace(/\{\{targetmessage\}\}/g, text);
 
     try {
-        const debugRequest = debugRecorder.add('translation', 'Translation request', {
-            profileId: settings.profileId,
-            maxTokens: settings.maxTokens || 1024,
-            targetLanguage: settings.targetLanguage,
-        });
         const result = await ConnectionManagerRequestService.sendRequest(
             settings.profileId,
             prompt,
@@ -359,7 +344,6 @@ async function translateText(text) {
             undefined,
             getProfileRequestOverrides(settings.profileId)
         );
-        debugRecorder.add('translation', `Translation result${debugRequest ? ` · request #${debugRequest.id}` : ''}`, result);
 
         let translation = result?.content || result?.text || result;
 
@@ -367,7 +351,6 @@ async function translateText(text) {
 
         return translation;
     } catch (error) {
-        debugRecorder.add('translation', 'Translation failed', error, 'error');
         console.error(`[${extensionName}] Translation error:`, error);
         toastr.error(`Translation failed: ${error.message}`, "LLM Translator");
     }
@@ -457,21 +440,6 @@ jQuery(async () => {
         $("#extensions_settings2").append(settingsHtml);
 
         await loadSettings();
-
-        const setDebugMode = enabled => {
-            extension_settings[extensionName].debugMode = enabled;
-            $('#llm_translator_debug_mode').prop('checked', enabled);
-            debugRecorder.setEnabled(enabled);
-            saveSettingsDebounced();
-        };
-        const debugViewer = mountDebugViewer(debugRecorder, setDebugMode);
-        const debugEnabled = extension_settings[extensionName].debugMode === true;
-        $('#llm_translator_debug_mode').prop('checked', debugEnabled).on('change', event => {
-            setDebugMode(event.target.checked);
-            if (event.target.checked) debugViewer.open();
-        });
-        $('#llm_translator_debug_open').on('click', debugViewer.open);
-        debugRecorder.setEnabled(debugEnabled);
 
         $("#llm_translator_language").on("input", onLanguageChange);
         $("#llm_translator_preset").on("change", onPresetChange);
