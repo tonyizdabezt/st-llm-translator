@@ -284,51 +284,78 @@ function extractFromCodeBlock(text) {
         result = result.replace(/^```[\w]*\r?\n?/gm, '');
         result = result.replace(/\r?\n?```$/gm, '');
     }
-    
+
     const inlineCodeMatch = result.match(/^`([^`]+)`$/);
     if (inlineCodeMatch) {
         result = inlineCodeMatch[1];
     }
-    
+
     return result.trim();
+}
+
+function getProfileRequestOverrides(profileId) {
+    const profile = ConnectionManagerRequestService.getProfile(profileId);
+    const api = ConnectionManagerRequestService.validateProfile(profile);
+    if (api.source !== 'vertexai') {
+        return {};
+    }
+
+    const preset = profile.preset
+        ? getPresetManager('openai')?.getCompletionPresetByName(profile.preset)
+        : undefined;
+
+    return {
+        vertexai_auth_mode: preset?.vertexai_auth_mode ?? oai_settings.vertexai_auth_mode ?? 'express',
+        vertexai_region: profile['api-url'] || preset?.vertexai_region || oai_settings.vertexai_region,
+        vertexai_express_project_id: preset?.vertexai_express_project_id ?? oai_settings.vertexai_express_project_id,
+    };
 }
 
 async function translateText(text) {
     const settings = extension_settings[extensionName];
-    
+
     if (!settings.profileId) {
         toastr.error("Please select a Connection Profile first", "LLM Translator");
         return null;
     }
-    
+
     if (!settings.targetLanguage) {
         toastr.error("Please set a target language first", "LLM Translator");
         return null;
     }
-    
+
     const preset = settings.promptPresets[settings.selectedPresetIndex];
     if (!preset) {
         toastr.error("No prompt preset selected", "LLM Translator");
         return null;
     }
-    
+
     const prompt = preset.prompt
         .replace(/\{\{language\}\}/g, settings.targetLanguage)
         .replace(/\{\{targetmessage\}\}/g, text);
-    
+
     try {
+        const debugRequest = debugRecorder.add('translation', 'Translation request', {
+            profileId: settings.profileId,
+            maxTokens: settings.maxTokens || 1024,
+            targetLanguage: settings.targetLanguage,
+        });
         const result = await ConnectionManagerRequestService.sendRequest(
             settings.profileId,
             prompt,
-            settings.maxTokens || 1024
+            settings.maxTokens || 1024,
+            undefined,
+            getProfileRequestOverrides(settings.profileId)
         );
-        
+        debugRecorder.add('translation', `Translation result${debugRequest ? ` · request #${debugRequest.id}` : ''}`, result);
+
         let translation = result?.content || result?.text || result;
-        
+
         translation = extractFromCodeBlock(translation);
-        
+
         return translation;
     } catch (error) {
+        debugRecorder.add('translation', 'Translation failed', error, 'error');
         console.error(`[${extensionName}] Translation error:`, error);
         toastr.error(`Translation failed: ${error.message}`, "LLM Translator");
     }
