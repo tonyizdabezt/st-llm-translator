@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { extension_settings, getContext, loadExtensionSettings } from "../../../extensions.js";
-import { eventSource, event_types, saveSettingsDebounced, updateMessageBlock } from "../../../../script.js";
+import { eventSource, event_types, main_api, saveSettingsDebounced, substituteParams, updateMessageBlock } from "../../../../script.js";
 import { ConnectionManagerRequestService } from "../../shared.js";
 import { oai_settings } from "../../../openai.js";
 import { getPresetManager } from "../../../preset-manager.js";
@@ -313,6 +313,28 @@ function getProfileRequestOverrides(profileId) {
     };
 }
 
+// lets extensions like Prompt Inspector view and edit the prompt before it's sent.
+async function announcePrompt(prompt, profileId) {
+    if (main_api !== 'openai') {
+        const data = { prompt, dryRun: false };
+        await eventSource.emit(event_types.GENERATE_AFTER_COMBINE_PROMPTS, data);
+        return data.prompt;
+    }
+
+    const chat = [{ role: 'user', content: prompt }];
+    await eventSource.emit(event_types.CHAT_COMPLETION_PROMPT_READY, { chat, dryRun: false });
+    if (chat.length === 1 && chat[0].role === 'user' && typeof chat[0].content === 'string') {
+        return chat[0].content;
+    }
+
+    const profile = ConnectionManagerRequestService.getProfile(profileId);
+    if (ConnectionManagerRequestService.validateProfile(profile).selected === 'openai') {
+        return chat;
+    }
+
+    return chat.map(m => typeof m.content === 'string' ? m.content : '').join('\n\n');
+}
+
 async function translateText(text) {
     const settings = extension_settings[extensionName];
 
@@ -332,11 +354,15 @@ async function translateText(text) {
         return null;
     }
 
-    const prompt = preset.prompt
+    let prompt = preset.prompt
         .replace(/\{\{language\}\}/g, settings.targetLanguage)
-        .replace(/\{\{targetmessage\}\}/g, text);
+        .split(/\{\{targetmessage\}\}/)
+        .map(part => substituteParams(part))
+        .join(text);
 
     try {
+        prompt = await announcePrompt(prompt, settings.profileId);
+
         const result = await ConnectionManagerRequestService.sendRequest(
             settings.profileId,
             prompt,
